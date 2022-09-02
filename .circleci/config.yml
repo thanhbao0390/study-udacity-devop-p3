@@ -37,7 +37,6 @@ jobs:
               ]
             }
           event: always
-          channel: '#general'
 
   build-backend:
     docker:
