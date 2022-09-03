@@ -323,8 +323,6 @@ jobs:
           fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"]
       - attach_workspace:
           at: ~/
-      - restore_cache:
-          keys: [backend-build]
       - run:
           name: Install dependencies
           command: |
@@ -336,8 +334,9 @@ jobs:
       - run:
           name: Install dependencies Node
           command: |
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
-            yum -y install nodejs
+            #curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            #yum -y install nodejs
+            apk add --update node npm
             node -v
             npm -v
       - run:
