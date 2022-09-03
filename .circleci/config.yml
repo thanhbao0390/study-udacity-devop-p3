@@ -25,7 +25,8 @@ commands:
       - run:
           name: Revert migrations
           when: on_fail
-          # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+          command: |
+            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
             success_migration=$(curl --insecure https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7})
             if ((success_migrations == 1));
             then
@@ -183,8 +184,8 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
-              cat .circleci/ansible/inventory.txt
               export BACKEND_PUBLIC_IP="http://${BACKEND_PUBLIC_IP}:3030"
+              cat .circleci/ansible/inventory.txt
               
       - persist_to_workspace:
           root: ~/
