@@ -13,7 +13,7 @@
     upgrade: "yes"
     update_cache: yes
 
-- name: "curl -sL https://deb.nodesource.com/setup_13.x | sudo bash - & sudo apt-get install -y nodejs"
+- name: "curl -sL https://rpm.nodesource.com/setup_13.x | bash - & sudo apt-get install -y nodejs"
   become: yes
   apt:
     name: nodejs
