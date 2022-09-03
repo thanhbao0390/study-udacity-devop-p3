@@ -188,9 +188,9 @@ jobs:
               cat .circleci/ansible/inventory.txt
               
       - persist_to_workspace:
-          root: ~/
+          root: .circleci/ansible
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - inventory.txt
       ## Here's where you will add some code to rollback on failure
       - destroy-environment
 
@@ -205,7 +205,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: ~/
+          at: /tmp/.circleci/ansible
       - run:
           name: Install dependencies
           command: |
@@ -214,9 +214,9 @@ jobs:
       - run:
           name: Configure server
           command: |
-            cat ~/project/.circleci/ansible/inventory.txt
+            cat ~/tmp/.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+            ansible-playbook -i ~/tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
       # Here's where you will add some code to rollback on failure
       - destroy-environment
 
