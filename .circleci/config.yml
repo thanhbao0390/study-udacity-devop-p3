@@ -168,6 +168,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+              export BACKEND_PUBLIC_IP = "http://${BACKEND_PUBLIC_IP}:3030"
               
       - persist_to_workspace:
           root: ~/
