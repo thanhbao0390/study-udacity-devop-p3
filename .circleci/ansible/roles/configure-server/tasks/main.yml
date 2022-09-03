@@ -2,22 +2,31 @@
   wait_for_connection:
     timeout: 60
 
-- name: "upgrade packages."
-  become: true
+- name: "update apt packages"
+  become: yes
   apt:
-    upgrade: "yes"
-
-- name: "install dependencies."
-  become: true
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
     update_cache: yes
 
-- name: "install pm2"
-  become: true
-  npm:
-    name: pm2
-    global: yes
-    production: yes
+- name: "upgrade packages"
+  become: yes
+  apt:
+    upgrade: "yes"
+    update_cache: yes
+
+- name: "install node"
+  become: yes
+  apt:
+    name: nodejs
     state: present
+  
+- name: "install npm"
+  become: yes
+  apt:
+    name: npm
+    state: present
+
+# - name: "install pm2"
+#   become: yes
+#   npm:
+#     name: pm2
+#     global: yes

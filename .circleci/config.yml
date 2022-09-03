@@ -260,7 +260,6 @@ jobs:
   deploy-frontend:
     docker:
       - image: amazon/aws-cli
-      #  user: root
     steps:
       - checkout
       - attach_workspace:
@@ -301,10 +300,56 @@ jobs:
             cd frontend
             npm i
             npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
       - run:
           name: Deploy frontend objects
           command: |
-            aws s3 sync frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+            #aws s3 sync frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - destroy-environment
+      - revert-migrations
+
+  deploy-backend:
+    docker:
+      ## Docker image here that supports Ansible
+      - image: cimg/base:stable
+    steps:
+      ## Checkout code from git
+      ## Add ssh keys with fingerprint
+      ## attach workspace
+      - checkout
+      - install_awscli
+      - install_ansible
+      - install_nodejs
+      - add_ssh_keys:
+          fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"]
+      - attach_workspace:
+          at: ~/
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Install dependencies
+          command: |
+            cd backend
+            npm install
+      - run:
+          name: package backend
+          command: |
+            cd backend
+            npm run build
+            tar -czf artifact.tar.gz dist/* package*
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+      - run:
+          name: Deploy backend
+          command: |
+            export TYPEORM_MIGRATIONS_DIR=./migrations
+            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
+            export TYPEORM_MIGRATIONS=./migrations/*.ts
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      ## Here's where you will add some code to rollback on failure  
       - destroy-environment
       - revert-migrations
 
@@ -333,6 +378,8 @@ workflows:
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
           requires: [run-migrations]
             
       
