@@ -214,9 +214,11 @@ jobs:
       - run:
           name: Install dependencies Node
           command: |
+            sudo apt-get install curl
             curl -sL https://rpm.nodesource.com/setup_13.x | bash -
-            yum -y install nodejs
+            sudo apt-get install -y nodejs
             node -v
+            npm -v
       - run:
           name: Configure server
           command: |
