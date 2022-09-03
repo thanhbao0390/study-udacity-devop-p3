@@ -13,7 +13,7 @@
     upgrade: "yes"
     update_cache: yes
 
-- name: "curl -sL https://rpm.nodesource.com/setup_13.x | bash - & sudo apt-get install -y nodejs"
+- name: "install node"
   become: yes
   apt:
     name: nodejs
@@ -23,12 +23,6 @@
   become: yes
   apt:
     name: npm
-    state: present
-
-- name: "node -v & npm -v"
-  become: yes
-  apt:
-    name: check
     state: present
 
 - name: "install pm2"
