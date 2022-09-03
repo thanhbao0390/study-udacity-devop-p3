@@ -4,7 +4,4 @@ https://github.com/thanhbao0390/study-udacity-devop-p3
 URL2:
 http://udapeople-727526d.s3-website-us-east-1.amazonaws.com
 
-URL3:
-ec2-54-197-38-4.compute-1.amazonaws.com
-54.197.38.4
-
+URL3: 
