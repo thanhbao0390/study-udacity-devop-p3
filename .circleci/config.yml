@@ -212,14 +212,6 @@ jobs:
             pip install awscli
             apk add --update ansible
       - run:
-          name: Install dependencies Node
-          command: |
-            sudo apt-get install curl
-            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
-            sudo apt-get install -y nodejs
-            node -v
-            npm -v
-      - run:
           name: Configure server
           command: |
             cat ~/project/.circleci/ansible/inventory.txt
