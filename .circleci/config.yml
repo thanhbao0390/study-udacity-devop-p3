@@ -19,6 +19,21 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
 
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+            success_migration=$(curl --insecure https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            if ((success_migrations == 1));
+            then
+              cd  ~/project/backend
+              npm install
+              npm run migrations:revert
+            fi
+
 jobs:
   build-frontend:
     docker:
@@ -168,6 +183,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+              cat .circleci/ansible/inventory.txt
               export BACKEND_PUBLIC_IP="http://${BACKEND_PUBLIC_IP}:3030"
               
       - persist_to_workspace:
@@ -202,6 +218,83 @@ jobs:
       # Here's where you will add some code to rollback on failure
       - destroy-environment
 
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            # Run and save the migration output
+            npm run migrations > migrations_dump.txt
+            cat migrations_dump.txt
+      - run:
+          name: Send migration results to memstash
+          command: |
+            # Your code here
+            if grep -q "has been executed successfully." ~/project/backend/migrtions_dump.txt
+            then
+              curl https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
+      - destroy-environment
+
+  deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+      #  user: root
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies Node
+          command: |
+            curl -sL https://rpm.nodesource.com/setup_13.x | bash -
+            yum -y install nodejs
+            node -v
+      - run:
+          name: Install dependencies tar
+          command: |
+            yum -y install tar
+      - run:
+          name: Install dependencies gzip
+          command: |
+            yum -y install gzip
+      - run:
+          name: Install dependencies awscli
+          command: |
+            yum install awscli
+      - run:
+          name: Set env variables
+          command: |
+            # your code here also added filters
+            export BACKEND_IP=$(aws ec2 describe-instances \
+            --filters Name=tag:Name,Values="backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Build frontend objects
+          command: |
+            cd frontend
+            npm i
+            npm run build
+      - run:
+          name: Deploy frontend objects
+          command: |
+            aws s3 sync frontend/dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}
+      - destroy-environment
+      - revert-migrations
+
+
 workflows:
   default:
     jobs:
@@ -223,6 +316,9 @@ workflows:
               only: [main]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
             
       
