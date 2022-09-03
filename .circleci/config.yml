@@ -188,9 +188,9 @@ jobs:
               cat .circleci/ansible/inventory.txt
               
       - persist_to_workspace:
-          root: ~/
+          root: .circleci/ansible
           paths:
-            - .circleci/ansible/inventory.txt
+            - inventory.txt
       ## Here's where you will add some code to rollback on failure
       - destroy-environment
 
@@ -205,7 +205,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: ~/
+          at: /tmp/.circleci/ansible
       - run:
           name: Install dependencies
           command: |
@@ -219,11 +219,10 @@ jobs:
           name: Configure server
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
-            cd .circleci/ansible
             echo $PWD
             echo ls -l
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
+            cat /tmp/.circleci/ansible/inventory.txt
+            ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
       
       # Here's where you will add some code to rollback on failure
       - destroy-environment
@@ -253,11 +252,6 @@ jobs:
             node -v
             npm -v
             npm install
-            # npm audit fix
-            # npm run build
-            # npm audit fix --audit-level=critical --force
-            # npm audit --audit-level=critical
-            # Run and save the migration output
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run:
@@ -275,8 +269,6 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
       - run:
           name: Install dependencies Node
           command: |
