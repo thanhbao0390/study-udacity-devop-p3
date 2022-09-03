@@ -30,7 +30,7 @@ commands:
             success_migration=$(curl --insecure https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7})
             if ((success_migrations == 1));
             then
-              cd  ~/project/backend
+              cd  ~/backend
               npm install
               npm run migrations:revert
             fi
@@ -205,18 +205,38 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: /tmp/.circleci/ansible
+          at: ~/
       - run:
           name: Install dependencies
           command: |
+            apk add tar
+            apk add gzip
+            apk add openssh-client
+            apk add curl
             pip install awscli
             apk add --update ansible
       - run:
+          name: Enviroment
+          command: |
+            touch ~/backend/.env
+            echo ENVIRONMENT=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> "backend/.env"
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+      - run:
           name: Configure server
           command: |
-            cat ~/tmp/.circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i ~/tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      
       # Here's where you will add some code to rollback on failure
       - destroy-environment
 
@@ -251,7 +271,7 @@ jobs:
           name: Send migration results to memstash
           command: |
             # Your code here
-            if grep -q "has been executed successfully." ~/project/backend/migrtions_dump.txt
+            if grep -q "has been executed successfully." ~/backend/migrtions_dump.txt
             then
               curl https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
