@@ -350,8 +350,9 @@ jobs:
           command: |
             cd .circleci/ansible
             echo $PWD
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            cat /tmp/.circleci/ansible/inventory.txt
+            cat deploy-backend.yml
+            ansible-playbook -i /tmp/.circleci/ansible/inventory.txt deploy-backend.yml
             
       ## Here's where you will add some code to rollback on failure  
       - destroy-environment
