@@ -351,15 +351,10 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            echo $PWD
-            echo ls -l
-            mkdir .circleci/ansible/roles/deploy/files
-            mv artifact.tar.gz .circleci/ansible/roles/deploy/files
             cd .circleci/ansible
-            echo "inventory.txt file IPs are"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-
+            
       ## Here's where you will add some code to rollback on failure  
       - destroy-environment
       - revert-migrations
