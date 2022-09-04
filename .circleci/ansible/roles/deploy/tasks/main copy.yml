@@ -1,0 +1,50 @@
+- name: "Create directory"
+  file:
+    path: /home/ubuntu/udapeople
+    state: directory
+
+- name: "Copy files"
+  copy:
+    src: artifact.tar.gz
+    dest: /home/ubuntu/udapeople/artifact.tar.gz
+    backup: yes
+
+- name: "Uncompress files"
+  shell: |
+    cd /home/ubuntu/udapeople
+    tar xvzf artifact.tar.gz -C .
+    ls -la
+
+- name: "install nvm"
+  command: yes
+  shell: |
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+
+- name: "install node version v13.8.0"
+  command: yes
+  shell: |
+	  nvm install 13.8.0
+
+- name: "install pm2"
+  command: yes
+  shell: |
+	  install pm2
+
+- name: "Start Application"
+  become: yes
+  command: pm2 start -f dist/main.js
+  args:
+    chdir: /home/ubuntu/udapeople
+
+  environment:
+   ENVIRONMENT: production
+   BACKEND_PORT: 3030
+   TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
+   TYPEORM_MIGRATIONS_DIR: "./migrations"
+   TYPEORM_MIGRATIONS: "./migrations/*.js"
+   TYPEORM_ENTITIES: "./modules/domain/**/*.entity.js"
+   TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
+   TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
+   TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
+   TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
+   TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
