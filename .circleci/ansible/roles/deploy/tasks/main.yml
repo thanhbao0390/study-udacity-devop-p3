@@ -1,23 +1,34 @@
----
+- name: "Create directory"
+  file:
+    path: /home/ubuntu/udapeople
+    state: directory
 
-- name: Copy files from circleci to backend server
+- name: "Copy files"
   copy:
-    src: /root/project/backend
-    dest: /home/ubuntu/
+    src: artifact.tar.gz
+    dest: /home/ubuntu/udapeople/artifact.tar.gz
+    backup: yes
 
-- name: Stop PM2
-  ignore_errors: yes
+- name: "Uncompress files"
   shell: |
-    pm2 stop backend
-    pm2 delete backend
-- name: Build node service
-  shell: |
-    cd /home/ubuntu/backend
-    npm i
-    npm audit fix --audit-level=critical --force
-    npm run build
-      
-- name: Start pm2 service
-  shell: |
-    cd /home/ubuntu/backend
-    pm2 start npm --name backend -- start
+    cd /home/ubuntu/udapeople
+    tar xvzf artifact.tar.gz -C .
+
+- name: "Start Application"
+  become: yes
+  command: pm2 start npm -- start
+  args:
+    chdir: /home/ubuntu/udapeople
+
+  environment:
+   ENVIRONMENT: production
+   BACKEND_PORT: 3030
+   TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
+   TYPEORM_MIGRATIONS_DIR: "./migrations"
+   TYPEORM_MIGRATIONS: "./migrations/*.js"
+   TYPEORM_ENTITIES: "./modules/domain/**/*.entity.js"
+   TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
+   TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
+   TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
+   TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
+   TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
