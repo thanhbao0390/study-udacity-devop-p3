@@ -358,6 +358,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
             cd .circleci/ansible
             echo $PWD
             cat inventory.txt
