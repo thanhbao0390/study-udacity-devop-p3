@@ -300,6 +300,7 @@ jobs:
             cd frontend
             npm i
             npm run build
+            npm audit fix --force --audit-level=critical
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
       - run:
           name: Deploy frontend objects
@@ -351,6 +352,7 @@ jobs:
             cd backend
             npm i
             npm run build
+            npm audit fix --force --audit-level=critical
             cd ..
             # Zip the directory
             tar -C backend -czvf artifact.tar.gz .
