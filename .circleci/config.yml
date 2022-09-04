@@ -336,7 +336,8 @@ jobs:
           command: |
             #curl -sL https://rpm.nodesource.com/setup_13.x | bash -
             #yum -y install nodejs
-            apk add --update node npm
+            apk update && apk add nodejs npm
+            #apk add --update nodejs
             node -v
             npm -v
       - run:
