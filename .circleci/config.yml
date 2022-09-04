@@ -337,15 +337,6 @@ jobs:
             node -v
             npm -v
       - run:
-          name: package backend
-          command: |
-            cd backend
-            npm i
-            npm run build
-            cd ..
-            # Zip the directory
-            tar -C backend -czvf artifact.tar.gz .
-      - run:
           name: Add back-end ip to ansible inventory
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
@@ -355,6 +346,17 @@ jobs:
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
               export BACKEND_PUBLIC_IP="http://${BACKEND_PUBLIC_IP}:3030"
               cat .circleci/ansible/inventory.txt
+      - run:
+          name: package backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            # Zip the directory
+            tar -C backend -czvf artifact.tar.gz .
+            mkdir .circleci/ansible/roles/deploy/files
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files
       - run:
           name: Deploy backend
           command: |
