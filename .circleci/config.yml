@@ -220,7 +220,6 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             echo $PWD
-            echo ls -l
             cat /tmp/.circleci/ansible/inventory.txt
             ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
       

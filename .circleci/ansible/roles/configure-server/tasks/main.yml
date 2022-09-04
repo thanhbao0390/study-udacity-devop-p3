@@ -19,14 +19,14 @@
     name: nodejs
     state: present
   
-- name: "install npm"
+- name: "install npm && node -v && npm -v"
   become: yes
   apt:
     name: npm
     state: present
 
-# - name: "install pm2"
-#   become: yes
-#   npm:
-#     name: pm2
-#     global: yes
+- name: "install pm2"
+  become: yes
+  npm:
+    name: pm2
+    global: yes
