@@ -14,11 +14,28 @@
     cd /home/ubuntu/udapeople
     tar xvzf artifact.tar.gz -C .
     ls -la
+
+- name: "install nvm"
+  command: yes
+  shell: |
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+
+- name: "install node version v13.8.0"
+  command: yes
+  shell: |
+	  nvm install 13.8.0
+
+- name: "install pm2"
+  command: yes
+  shell: |
+	  install pm2
+
 - name: "Start Application"
   become: yes
   command: pm2 start -f dist/main.js
   args:
     chdir: /home/ubuntu/udapeople
+
   environment:
    ENVIRONMENT: production
    BACKEND_PORT: 3030
