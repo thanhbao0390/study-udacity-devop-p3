@@ -20,11 +20,6 @@
     state: latest
     update_cache: yes
 
-- name: "Check version"
-  shell: |
-    node -v
-    npm -v
-
 - name: "install pm2"
   become: yes
   npm:

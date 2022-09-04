@@ -18,4 +18,4 @@
   become: yes
   command: pm2 start -f ./main.js
   args:
-    chdir: /home/ubuntu/udapeople
+    chdir: /home/ubuntu/udapeople/dist
