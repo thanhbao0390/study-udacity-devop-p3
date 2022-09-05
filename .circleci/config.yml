@@ -359,7 +359,7 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
-            apk add --update ansible curl rsync openssh tar gzip bash nodejs npm
+            sudo apk add --update ansible curl rsync openssh tar gzip bash nodejs npm
             pip install awscli
             aws --version
             ansible --version
@@ -395,9 +395,10 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
-            sudo npm i
-            sudo npm run build
-            sudo npm audit fix --force --audit-level=critical
+            npm i
+            npm run build
+            npm run prestart:prod
+            npm audit fix --force --audit-level=critical
             cd ..
             # Zip the directory
             tar -C backend -czvf artifact.tar.gz .
