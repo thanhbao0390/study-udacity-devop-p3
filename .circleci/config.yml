@@ -345,7 +345,8 @@ jobs:
   deploy-backend:
     docker:
       ## Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
+      #- image: python:3.7-alpine3.11
+      - image: cimg/node:13.8.0
     steps:
       ## Checkout code from git
       ## Add ssh keys with fingerprint
@@ -356,19 +357,15 @@ jobs:
       - attach_workspace:
           at: /~
       - run:
-          name: Install dependencies
+          name: Install tar gzip
           command: |
-            # your code here
-            sudo apk add --update ansible curl rsync openssh tar gzip bash nodejs npm
-            pip install awscli
-            aws --version
-            ansible --version
+            sudo apt -y install python3 tar gzip
       - run:
-          name: Install dependencies Node
+          name: Install awscli ansible
           command: |
-            apk update && apk add nodejs npm
-            node -v
-            npm -v
+            sudo apt-get -y update
+            sudo apt-get -y install awscli ansible
+            
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -397,8 +394,8 @@ jobs:
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
             npm i
             npm run build
-            npm run prestart:prod
             npm audit fix --force --audit-level=critical
+            npm run prestart:prod
             cd ..
             # Zip the directory
             tar -C backend -czvf artifact.tar.gz .
