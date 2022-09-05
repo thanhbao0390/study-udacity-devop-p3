@@ -108,6 +108,7 @@ jobs:
             cd backend
             npm i
             npm run build
+            npm audit fix --force --audit-level=critical
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -278,13 +279,14 @@ jobs:
             node -v
             npm -v
             npm install
+            npm audit fix --audit-level=critical --force
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run:
           name: Send migration results to memstash
           command: |
             # Your code here
-            if grep -q "has been executed successfully." ~/project/backend/migrtions_dump.txt
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
               curl https://kvdb.io/9B6earijytWR5tL1bU197z/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
