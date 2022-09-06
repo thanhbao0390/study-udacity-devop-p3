@@ -16,8 +16,8 @@
 
 - name: "Start Application"
   become: yes
-  command: pm2 start main.js
+  command: pm2 start dist/main.js
   args:
-    chdir: /home/ubuntu/udapeople/dist
+    chdir: /home/ubuntu/udapeople
 
   
