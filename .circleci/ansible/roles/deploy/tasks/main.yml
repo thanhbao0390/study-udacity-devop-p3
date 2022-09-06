@@ -16,8 +16,18 @@
 
 - name: "Start Application"
   become: yes
-  command: pm2 start dist/main.js
+  shell: |
+    pm2 list
+    pm2 start dist/main.js
+    pm2 list
   args:
     chdir: /home/ubuntu/udapeople
+    
+- name: "show log pm2"
+  become: yes
+  shell: |
+    cat .pm2/logs/main-error.log
+  args:
+    chdir: /home/ubuntu
 
   
