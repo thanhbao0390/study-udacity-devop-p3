@@ -22,12 +22,6 @@
     pm2 list
   args:
     chdir: /home/ubuntu/udapeople
-    
-- name: "show log pm2"
-  become: yes
-  shell: |
-    cat .pm2/logs/main-error.log
-  args:
-    chdir: /home/ubuntu
+
 
   
