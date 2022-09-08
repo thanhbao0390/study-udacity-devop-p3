@@ -401,7 +401,7 @@ jobs:
                               --query 'Reservations[*].Instances[*].PublicIpAddress' \
                               --output text)
             echo "${BACKEND_IP}"
-            if curl "http://${BACKEND_IP}:3030/api/statusw" | grep "ok"
+            if curl "http://${BACKEND_IP}:3030/api/status" | grep "ok"
             then
               return 0
             else
@@ -409,6 +409,23 @@ jobs:
             fi
       
       # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+
+  cloudfront-update:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation update-stack \
+              --use-previous-template \
+              --stack-name udapeople-cloudfront \
+              --parameters ParameterKey=WorkflowID,ParameterValue=${CIRCLE_WORKFLOW_ID:0:7},UsePreviousValue=false
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations:
@@ -444,5 +461,7 @@ workflows:
           requires: [run-migrations]
       - smoke-test:
          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+         requires: [smoke-test]
             
       
