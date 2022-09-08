@@ -3,12 +3,12 @@
     timeout: 60
 
 - name: "update apt packages"
-  become: yes
+  become: true
   apt:
     update_cache: yes
 
 - name: "upgrade packages"
-  become: yes
+  become: true
   apt:
     upgrade: "yes"
     update_cache: yes
@@ -21,9 +21,9 @@
     update_cache: yes
 
 - name: "install pm2"
-  become: yes
+  become: true
   npm:
     name: pm2
-    global: yes
-    production: yes
+    global: true
+    production: true
     state: present
