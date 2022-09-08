@@ -36,7 +36,7 @@ commands:
             success_migration=$(curl --insecure https://kvdb.io/9B6earijytWR5tL1bU197z/migration_<< parameters.workflow_id >>)
             if ((success_migrations == 1));
             then
-              cd  ~/backend
+              cd  ~/project/backend
               npm install
               npm run migrations:revert
             fi
@@ -401,7 +401,7 @@ jobs:
                               --query 'Reservations[*].Instances[*].PublicIpAddress' \
                               --output text)
             echo "${BACKEND_IP}"
-            if curl "http://${BACKEND_IP}:3030/api/status" | grep "ok"
+            if curl "http://${BACKEND_IP}:3030/api/statusw" | grep "ok"
             then
               return 0
             else
