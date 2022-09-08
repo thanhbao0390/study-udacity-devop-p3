@@ -41,6 +41,25 @@ commands:
               npm run migrations:revert
             fi
 
+  write-envvars-file:
+    description: Command used for creating env file
+    steps:
+      - run:
+          name: Add env vars to env file
+          command: |
+            echo "NODE_ENV=production" >> backend/.env
+            echo "VERSION=1" >> backend/.env
+            echo "TYPEORM_CONNECTION=${TYPEORM_CONNECTION}" >> backend/.env
+            echo "TYPEORM_MIGRATIONS_DIR=${TYPEORM_MIGRATIONS_DIR}" >> backend/.env
+            echo "TYPEORM_ENTITIES=${TYPEORM_ENTITIES}" >> backend/.env
+            echo "TYPEORM_MIGRATIONS=${TYPEORM_MIGRATIONS}" >> backend/.env
+            echo "TYPEORM_HOST=${TYPEORM_HOST}" >> backend/.env
+            echo "TYPEORM_PORT=${TYPEORM_PORT}" >> backend/.env
+            echo "TYPEORM_USERNAME=${TYPEORM_USERNAME}" >> backend/.env
+            echo "TYPEORM_PASSWORD=${TYPEORM_PASSWORD}" >> backend/.env
+            echo "TYPEORM_DATABASE=${TYPEORM_DATABASE}" >> backend/.env  
+
+
 jobs:
   build-frontend:
     docker:
@@ -191,13 +210,13 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+              export BACKEND_PUBLIC_IP="http://${BACKEND_PUBLIC_IP}:3030"
               cat .circleci/ansible/inventory.txt
               
       - persist_to_workspace:
-          root: ~/
+          root: .circleci/ansible
           paths:
-            - project/.circleci/ansible/inventory.txt
-            - project/.circleci/ansible/backendip.txt
+            - inventory.txt
       ## Here's where you will add some code to rollback on failure
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -213,7 +232,7 @@ jobs:
       - add_ssh_keys:
           fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"] # You can get this ID in the section where you registered the SSH Key
       - attach_workspace:
-          at: ~/
+          at: /tmp/.circleci/ansible
       - run:
           name: Install dependencies
           command: |
@@ -228,9 +247,8 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=False
             echo $PWD
-            cat ~/project/.circleci/ansible/inventory.txt
-            cd ~/project/.circleci/ansible
-            ansible-playbook -i inventory.txt configure-server.yml
+            cat /tmp/.circleci/ansible/inventory.txt
+            ansible-playbook -i /tmp/.circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
       
       # Here's where you will add some code to rollback on failure
       - destroy-environment:
@@ -243,13 +261,25 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
-      - attach_workspace:
-          at: ~/
       - run:
           name: Run migrations
           command: |
             cd backend
+            # echo ENVIRONMENT=production >> ".env"
+            # echo NODE_ENV=production >> ".env"
+            # echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> ".env"
+            # echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> ".env"
+            # echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> ".env"
+            # echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> ".env"
+            # echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
+            # echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
+            # echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
+            # echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
+            # echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
+            node -v
+            npm -v
             npm install
+            #npm audit fix --audit-level=critical --force
             npm run migrations > migrations_dump.txt
             cat migrations_dump.txt
       - run:
@@ -314,37 +344,74 @@ jobs:
 
   deploy-backend:
     docker:
-      - image: cimg/python:3.10.6
-
+      ## Docker image here that supports Ansible
+      #- image: python:3.7-alpine3.11
+      - image: cimg/node:13.8.0
     steps:
+      ## Checkout code from git
+      ## Add ssh keys with fingerprint
+      ## attach workspace
       - checkout
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/
+      - restore_cache:
+          keys: [backend-build]
       - add_ssh_keys:
-          fingerprints:
-            - "16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"
-      
+          fingerprints: ["16:cd:88:16:a6:7f:4f:38:eb:f3:da:15:20:ce:2d:51"]
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Install dependencies
+          name: Install tar gzip
           command: |
-            python3 -m pip install --user ansible
-            sudo apt update
-            sudo apt install nodejs
-            sudo apt install npm
-
+            sudo apt -y install python3 tar gzip
       - run:
-          name: Deploy backend and run ansible
+          name: Install awscli ansible
           command: |
+            sudo apt-get -y update
+            sudo apt-get -y install awscli ansible
+            
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+              echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+              export BACKEND_PUBLIC_IP="http://${BACKEND_PUBLIC_IP}:3030"
+              cat .circleci/ansible/inventory.txt
+      - run:
+          name: package backend
+          command: |
+            sudo npm cache clean -f
             cd backend
+            echo ENVIRONMENT=production >> ".env"
+            echo NODE_ENV=production >> ".env"
+            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> ".env"
+            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> ".env"
+            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> ".env"
+            echo TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS >> ".env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> ".env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> ".env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> ".env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> ".env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> ".env"
             npm i
             npm run build
-            ls
-            pwd
-            cd .. 
+            npm audit fix --force --audit-level=critical
+            #npm run migrations > migrations_dump.txt
+            #cat migrations_dump.txt
+            cd ..
+            # Zip the directory
             tar -C backend -czvf artifact.tar.gz .
-
-            cd ~/project/.circleci/ansible
+            mkdir .circleci/ansible/roles/deploy/files
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files
+      - run:
+          name: Deploy backend
+          command: |
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            cd .circleci/ansible
+            echo $PWD
+            cat inventory.txt
+            cat deploy-backend.yml
             ansible-playbook -i inventory.txt deploy-backend.yml
             
       ## Here's where you will add some code to rollback on failure  
