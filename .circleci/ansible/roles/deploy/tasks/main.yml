@@ -1,27 +1,22 @@
-- name: "Create directory"
-  file:
-    path: /home/ubuntu/udapeople
-    state: directory
-
-- name: "Copy files"
+- name: "wait 600 seconds for target connection to become reachable/usable."
+  ansible.builtin.wait_for_connection:
+  timeout: 600
+- name: Copy backend compressed file 
+  become: true
   copy:
-    src: artifact.tar.gz
-    dest: /home/ubuntu/udapeople/artifact.tar.gz
-    backup: true
-
-- name: "Uncompress files"
-  shell: |
-    cd /home/ubuntu/udapeople
-    tar xvzf artifact.tar.gz -C .
-
-- name: "Start Application"
+    src: /home/circleci/project/artifact.tar.gz
+    dest: /home/ubuntu/backend/
+- name: Extract backend files
   become: true
   shell: |
-    pm2 list
-    pm2 start dist/main.js
-    pm2 list
-  args:
-    chdir: /home/ubuntu/udapeople
-
-
-  
+    cd /home/ubuntu/backend
+    tar -vxf artifact.tar.gz
+    rm artifact.tar.gz
+- name : Compile and start app 
+  become : true 
+  shell : | 
+    cd /home/ubuntu/backend
+    sudo npm install
+    
+    pm2 stop default
+    pm2 start npm -- start
