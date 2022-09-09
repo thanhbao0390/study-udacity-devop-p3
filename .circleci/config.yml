@@ -430,7 +430,7 @@ jobs:
       - run:
           name: Update cloudfront distribution
           command: |
-            aws cloudformation deploy \
+            aws cloudformation update-stack \
               --template-file .circleci/files/cloudfront.yml \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --stack-name BaoNT1P3Stack
@@ -470,10 +470,6 @@ jobs:
             else
               echo "nothing to clean up........."
             fi
-      # - run:
-      #     name: Save Old Workflow ID to kvdb.io
-      #     command: |
-      #       curl https://kvdb.io/9B6earijytWR5tL1bU197z/old_workflow_id -d "${CIRCLE_WORKFLOW_ID:0:7}"
 
 workflows:
   default:
