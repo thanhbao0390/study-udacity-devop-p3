@@ -1,0 +1,12 @@
+URL01:
+https://github.com/thanhbao0390/study-udacity-devop-p3
+
+URL02:
+http://udapeople-f9e4b6a.s3-website-us-east-1.amazonaws.com
+Note : S3 URL will change on last build .So, please check the correct URL in the attachment when submitting the project
+
+URL03: 
+http://d2iy9atgfgryak.cloudfront.net/#/employees
+
+URL04: 
+http://34.201.59.69:3030/api/status
