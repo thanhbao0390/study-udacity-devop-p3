@@ -461,16 +461,21 @@ jobs:
                     --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             echo Stack names= "${STACKS[@]}"
 
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            if [ -z "$var" ]
             then
-              # your code here
-              echo "cleaning up ............."
-              echo bucket= "s3://udapeople-${OldWorkflowID}"
-              aws s3 rb "s3://udapeople-${OldWorkflowID}" --force
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
-            else
               echo "nothing to clean up........."
+            else
+              if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+              then
+                # your code here
+                echo "cleaning up ............."
+                echo bucket= "s3://udapeople-${OldWorkflowID}"
+                aws s3 rb "s3://udapeople-${OldWorkflowID}" --force
+                aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+                aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+              else
+                echo "nothing to clean up........."
+              fi
             fi
 
 workflows:
